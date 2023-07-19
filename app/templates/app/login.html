@@ -1,0 +1,53 @@
+{% extends './base.html' %}
+
+{% block title %}Login{% endblock title %}
+
+{% block content %}
+
+    {% csrf_token %}
+
+    <div class="vw-100 vh-100 d-flex justify-content-center align-items-center">
+        <div class="card col-lg-6 col-md-8 col-11 shadow">
+            <div class="card-body p-5">
+
+                <h5 class="card-title h1 mb-3">Login</h5>
+
+                <ul class="nav nav-pills nav-fill" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" onclick="
+                            document.querySelector('#isadmin').value = 'false'
+                        " data-bs-toggle="tab" data-bs-target="#teacher" type="button" role="tab">Teacher</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" onclick="
+                            document.querySelector('#isadmin').value = 'true'
+                        " data-bs-toggle="tab" data-bs-target="#admin" type="button" role="tab">Admin</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content my-3">
+                    <div class="tab-pane fade show active" id="teacher" role="tabpanel"></div>
+                    <div class="tab-pane fade" id="profile" role="tabpanel"></div>
+                </div>
+
+                <form id="loginForm" class="call d-flex flex-column justify-content-center align-items-center">
+                    <input type="hidden" id="isadmin" value="false">
+                    <div class="form-floating mb-3 col-lg-6">
+                        <input type="text" class="form-control" id="username" placeholder="username" required>
+                        <label>Username</label>
+                    </div>
+                    <div class="form-floating mb-3 col-lg-6">
+                        <input type="password" class="form-control" id="password" placeholder="password" required>
+                        <label>Password</label>
+                    </div>
+                    <input type="submit" class="text-align-center btn btn-primary" value="Login">
+                </form>
+
+            </div>
+        </div>
+    </div>
+{% endblock content %}
+
+{% block script %}
+    
+{% endblock script %}

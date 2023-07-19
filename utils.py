@@ -1,6 +1,13 @@
 import json, pandas
+from django.forms import Form
 
 BASE_DIR = './'
+
+def parseForm(form: Form) -> tuple[bool, dict]:
+    if not form.is_valid():
+        return (False, { 'valid': False, 'message': 'Invalid submission!' })
+    
+    return (True, form.cleaned_data)
 
 def saveDict(data: dict, key: str) -> None:
     with open(BASE_DIR + 'data.json', 'r') as f:
