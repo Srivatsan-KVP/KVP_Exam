@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 
 import json, pandas
 
-BASE_DIR = './'
+# BASE_DIR = './'
+BASE_DIR = '/home/kvpexam/KVP_Exam/'
 
 def parseForm(form: Form) -> tuple[bool, dict]:
     if not form.is_valid():
