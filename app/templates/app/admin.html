@@ -1,0 +1,480 @@
+{% extends './base.html' %}
+
+{% block title %}Master{% endblock title %}
+
+{% block content %}
+
+    <div class="d-flex justify-content-between align-items-center flex-column flex-sm-row my-3">
+        <h1 class="h1">Master Record</h1>
+        <button class="btn btn-success" onclick="location.reload()">Save all changes</button>
+    </div>
+    {% csrf_token %}
+
+    <ul class="nav nav-pills nav-fill mb-3">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#subjects" type="button" role="tab">Subjects</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#classes" type="button" role="tab">Classes</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#teachers" type="button" role="tab">Teachers</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#exams" type="button" role="tab">Exams</button>
+        </li>
+    </ul>
+
+    <div class="tab-content pt-3">
+
+        <div class="tab-pane fade show active" id="subjects" role="tabpanel">
+
+            <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 py-4">
+                {% for subject in subjects %}
+                    <div class="col" data-uid="{{ subject.uid.hex }}">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <div class="card-title" contenteditable>{{ subject.name }}</div>
+                                <div>
+                                    <button onclick="
+                                        saveSubject(this.parentElement.parentElement.parentElement.parentElement)
+                                    " class="btn btn-primary mx-2">Save</button>
+                                    <button onclick="
+                                        removeSubject(this.parentElement.parentElement.parentElement.parentElement)
+                                    " class="btn btn-danger mx-2">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="text-center">
+                <button onclick="addSubject()" class="btn btn-secondary rounded-pill">Add Subject</button>
+            </div>
+        </div>
+
+        <div class="tab-pane fade show" id="classes" role="tabpanel">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Strength</th>
+                            <th>Group</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for room in rooms %}
+                            <tr data-uid={{ room.uid.hex }}>
+                                <td contenteditable>{{ room.name }}</td>
+                                <td contenteditable>{{ room.strength }}</td>
+                                <td contenteditable>{{ room.group }}</td>
+                                <td>
+                                    <button onclick="
+                                        saveClass(this.parentElement.parentElement)
+                                    " class="btn mx-2 btn-primary">Save</button>
+                                    <button onclick="
+                                        removeClass(this.parentElement.parentElement)
+                                    " class="btn mx-2 btn-danger">Delete</button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            <div class="text-center">
+                <button onclick="addClass()" class="btn btn-secondary rounded-pill">Add Class</button>
+            </div>
+        </div>
+
+        <div class="tab-pane fade show" id="teachers" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center
+                flex-col flex-sm-row my-3 ms-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target=".modal#new_teacher">New Teacher</button>
+                <div class="col-md-4">
+                    <input type="text" id="search" class="col-md-4 form-control mx-3" placeholder="Search">
+                </div>
+            </div>
+
+            <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 py-4">
+                {% for room in relations %}
+                    <div class="col">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <div class="card-title">{{ room.name }}</div>
+                                <div>
+                                    <button onclick="editRel('{{ room.uid.hex }}')" class="btn btn-primary mx-2">Edit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tab-pane fade show" id="exams" role="tabpanel">
+
+            <div class="text-center mb-3">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target=".modal#new_exam">New Exam</button>
+            </div>
+
+            <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 py-4">
+                {% for d in dates %}
+                    <div class="col">
+                        <div class="card shadow">
+                            <div class="card-body">
+                                <div class="card-title">{{ d }}</div>
+                                <div>
+                                    <a href="/saved/{{ d }}/" target="_blank" class="btn btn-primary">View</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="new_teacher" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">New Teacher</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="new_teacher">
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="name" placeholder="name" required>
+                            <label>Name</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="username" placeholder="username" required>
+                            <label>Username</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="password" class="form-control" id="password" placeholder="Password" required>
+                            <label>Password</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="addTeacher()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="edit_rel" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Teacher Subject Relation: <span></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+
+                            <thead>
+                                <tr>
+                                    <th>Teacher</th>
+                                    <th>Subject</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+
+                            <tbody></tbody>
+
+                        </table>
+                    </div>
+                    <div class="text-center my-3">
+                        <button onclick="addRel()" class="btn btn-secondary">Add Relation</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="new_exam" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Exam Configuration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="col-md-8 col-lg-6 mx-auto">
+                        <div class="form-floating mb-3">
+                            <input type="date" class="form-control" id="exam_date" placeholder="Date">
+                            <label>Date of exam</label>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Class</th>
+                                    <th>Enroll</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for room in rooms %}
+                                    <tr>
+                                        <td>{{ room.name }}</td>
+                                        <td><input checked class="form-check-input" type="checkbox" value="{{ room.uid.hex }}"></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="lead">Note: It may take a while to load the arrangement. You will be automically taken to the page.</p>
+                        <button onclick="arrangement()" class="btn btn-primary">Generate Arrangement</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock content %}
+
+{% block script %}
+
+    const addSubject = () => {
+        $('#subjects .row').append(`
+            <div class="col" data-uid="">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="card-title" contenteditable>New Subject</div>
+                        <div class="d-flex justify-content-center">
+                            <button onclick="
+                                saveSubject(this.parentElement.parentElement.parentElement.parentElement)
+                            " class="btn btn-primary mx-2">Save</button>
+                            <button onclick="
+                                removeSubject(this.parentElement.parentElement.parentElement.parentElement)
+                            " class="btn btn-danger mx-2">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `)
+    }
+
+    const saveSubject = (card) => {
+        postData({
+            uid: (card.dataset.uid ? card.dataset.uid : ""),
+            name: card.querySelector('.card-title').innerText,
+            add: 'subject',
+            remove: ''
+        }, (res) => card.dataset.uid = res.uid, true)
+    }
+
+    const removeSubject = (card) => {
+        if (card.dataset.uid)
+            postData({
+                uid: card.dataset.uid,
+                add: '',
+                remove: 'subject'
+            }, (res) => card.remove(), true)
+
+        else
+            card.remove()
+    }
+
+
+
+
+    const addClass = () => {
+        $('#classes tbody').append(`
+            <tr data-uid="">
+                <td contenteditable>Name</td>
+                <td contenteditable>0</td>
+                <td contenteditable>0</td>
+                <td>
+                    <button onclick="
+                        saveClass(this.parentElement.parentElement)
+                    " class="btn mx-2 btn-primary">Save</button>
+                    <button onclick="
+                        removeClass(this.parentElement.parentElement)
+                    " class="btn mx-2 btn-danger">Delete</button>
+                </td>
+            </tr>
+        `)
+    }
+
+    const saveClass = (tr) => {
+        postData({
+            uid: (tr.dataset.uid ? tr.dataset.uid : ''),
+            name: tr.children[0].innerText,
+            strength: parseInt(tr.children[1].innerText),
+            group: parseInt(tr.children[2].innerText),
+            add: 'class',
+            remove: ''
+        }, (res) => tr.dataset.uid = res.uid, true)
+    }
+
+    const removeClass = (tr) => {
+        if (tr.dataset.uid)
+            postData({
+                uid: tr.dataset.uid,
+                add: '',
+                remove: 'class'
+            }, (res) => tr.remove(), true)
+
+        else
+            tr.remove()
+    }
+
+
+
+    MODAL = new bootstrap.Modal(document.querySelector('.modal#new_teacher'))
+    const addTeacher = () => {
+        data = getData(document.querySelector('form#new_teacher'))
+        data['uid'] = ''; data['add'] = 'teacher'; data['remove'] = '';
+
+        postData(data, (res) => MODAL.hide(), true)
+    }
+
+    
+    CLASSES_MAP = {
+        {% for room in rooms %}
+            '{{ room.uid.hex }}': '{{ room.name }}',
+        {% endfor %}
+    }
+    REL_MAP = {
+        {% for room, rels in relations.items %}
+            '{{ room.uid.hex }}': [
+                {% for rel in rels %}
+                    {
+                        uid: '{{ rel.uid.hex }}',
+                        teacher: '{{ rel.teacher.uid.hex }}',
+                        subj: '{{ rel.subject.uid.hex }}'
+                    },
+                {% endfor %}
+            ],
+        {% endfor %}
+    }
+
+    TEACHERS_OPTIONS = `
+        <select class="form-select" name='teacher'>
+            {% for teacher in teachers %}
+                <option value="{{ teacher.uid.hex }}">{{ teacher.name }}</option>
+            {% endfor %}
+        </select> 
+    `
+    SUBJECTS_OPTIONS = `
+        <select class="form-select" name='subject'>
+            {% for subject in subjects %}
+                <option value="{{ subject.uid.hex }}">{{ subject.name }}</option>
+            {% endfor %}  
+        </select> 
+    `
+
+    const addRel = () => {
+        $('.modal#edit_rel .modal-body tbody').append(`
+            <tr data-uid=''>
+                <td>${TEACHERS_OPTIONS}</td>
+                <td>${SUBJECTS_OPTIONS}</td>
+                <td>
+                    <button onclick="saveRel(this.parentElement.parentElement)" 
+                        class="btn btn-primary mx-2">Save</button>
+                    <button onclick="delRel(this.parentElement.parentElement)" 
+                        class="btn btn-danger mx-2">Remove</button>
+                </td>
+            </tr>
+        `)
+    }
+
+    const editRel = (uid) => {
+        modal = new bootstrap.Modal(document.querySelector('.modal#edit_rel'))
+        modal.show()
+
+        document.querySelector('.modal#edit_rel h5 span').innerText = CLASSES_MAP[uid]
+        form = document.querySelector('.modal#edit_rel .modal-body tbody')
+        form.dataset.room = uid
+
+        form.innerHTML = ''
+        REL_MAP[uid].forEach(rel => {
+            $(form).append(`
+                <tr data-uid='${rel.uid}'>
+                    <td>${TEACHERS_OPTIONS}</td>
+                    <td>${SUBJECTS_OPTIONS}</td>
+                    <td>
+                        <button onclick="saveRel(this.parentElement.parentElement)" 
+                            class="btn btn-primary mx-2">Save</button>
+                        <button onclick="delRel(this.parentElement.parentElement)" 
+                            class="btn btn-danger mx-2">Remove</button>
+                    </td>
+                </tr>
+            `)
+
+            row = form.querySelector(`tr[data-uid='${rel.uid}']`)
+            row.querySelector('select[name="teacher"]').value = rel.teacher
+            row.querySelector('select[name="subject"]').value = rel.subj
+        })
+    }
+
+    const saveRel = (tr) => {
+        data = getData(tr, 'name')
+        data['uid'] = tr.dataset.uid
+        data['room'] = document.querySelector('.modal#edit_rel .modal-body tbody').dataset.room
+        data['add'] = 'link'
+        data['remove'] = ''
+
+        postData(data, (res) => tr.dataset.uid = res.uid, true)
+    }
+
+    const delRel = (tr) => {
+        if (tr.dataset.uid)
+            postData({uid: tr.dataset.uid, add: '', remove: 'link'}, (res) => tr.remove(), true)
+
+        else
+            tr.remove()
+    }
+
+
+    
+
+    const arrangement = () => {
+        CLASS_REV_MAP = {}
+        classes = []
+        document.querySelectorAll('.modal#new_exam input[type="checkbox"]').forEach(check => {
+            if (check.checked) {
+                CLASS_REV_MAP[CLASSES_MAP[check.value]] = check.value
+
+                room = CLASSES_MAP[check.value]
+                classes.push([ parseInt(room.substr(0, room.length - 1)), room.substr(room.length-1) ])
+            }
+        })
+
+        uids = []
+        classes.sort((a, b) => {
+            console.log(`COMP: ${a} and ${b}`)
+            if (a[0] == b[0])
+                return a[1].charCodeAt(0) - b[1].charCodeAt(0)
+            return a[0] - b[0]
+        }).forEach(room => {
+            uids.push(CLASS_REV_MAP[room[0] + room[1]])
+        })
+
+    
+        date = document.querySelector('.modal#new_exam input[type="date"]').value.split('-')
+        postData({ 
+            add: 'exam', remove: '',
+            date: date[2]+date[1]+date[0], uids: JSON.stringify(uids)}, (res) => {
+            location.pathname = res.url
+        }, false)
+    }
+
+{% endblock script %}

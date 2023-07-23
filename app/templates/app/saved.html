@@ -1,0 +1,40 @@
+{% extends './base.html' %}
+
+{% block title %}Seating Plan{% endblock title %}
+
+{% block content %}
+
+    <h1 class="h1">Seating arrangement: {{ date }}</h1>
+
+    <div class="table table-responsive">
+        <table class="table table-bordered text-center">
+
+            <thead>
+                <tr>
+                    <th>Room</th>
+                    <th>Class</th>
+                    <th>From</th>
+                    <th>To</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for room, allot in info.items %}
+                    {% for class in allot %}
+                        <tr>
+                            {% if forloop.counter == 1 %}
+                                <td rowspan="{{ allot|length }}">{{ room }}</td>
+                            {% endif %}
+                            {% for k, v in class.items %}
+                                <td>{{ k }}</td>
+                                <td>{{ v.0 }}</td>
+                                <td>{{ v.1 }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+{% endblock content %}

@@ -1,0 +1,49 @@
+{% extends './base.html' %}
+
+{% block title %}Profile{% endblock title %}
+
+{% block content %}
+    {% csrf_token %}
+    <h1 class="h1 mb-3">Edit Profile</h1>
+
+    <div class="ms-sm-3 col-md-8 col-lg-6">
+        {% if not user.is_superuser %}
+            <form id="name_form" class="my-5 call">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="name" placeholder="Name" required value="{{ name }}">
+                    <label>Display name</label>
+                </div>
+                <input type="submit" value="Update" class="btn btn-primary">
+            </form>
+        {% else %}
+            <form id="username_form" class="my-5 call">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="username" placeholder="Username" required value="{{ user.username }}">
+                    <label>Username</label>
+                </div>
+                <input type="submit" value="Update" class="btn btn-primary">
+            </form>
+        {% endif %}
+
+        <form id="password_form" class="my-5 call">
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="password" placeholder="New Password" required>
+                <label>New Password</label>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="confirm" placeholder="Confirm Password" required>
+                <label>Confirm Password</label>
+            </div>
+            <input type="submit" value="Update" class="btn btn-primary">
+        </form>
+
+        {% if not user.is_superuser %}
+            <form id="delete_form" class="my-5 call">
+                <input type="hidden" id="delete" value="true">
+                <input type="submit" value="Delete Profile" class="btn btn-danger col-12">
+            </form>
+        {% endif %}
+
+    </div>
+
+{% endblock content %}

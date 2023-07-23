@@ -1,5 +1,7 @@
-import json, pandas
 from django.forms import Form
+from django.contrib.auth.models import User
+
+import json, pandas
 
 BASE_DIR = './'
 
@@ -8,6 +10,12 @@ def parseForm(form: Form) -> tuple[bool, dict]:
         return (False, { 'valid': False, 'message': 'Invalid submission!' })
     
     return (True, form.cleaned_data)
+
+def shouldAllow(req, adminReq: bool) -> bool:
+    return (User.objects.get(pk=req.user.pk).is_superuser == adminReq)
+
+
+# LOGIC UTILS
 
 def saveDict(data: dict, key: str) -> None:
     with open(BASE_DIR + 'data.json', 'r') as f:

@@ -1,0 +1,141 @@
+{% extends './base.html' %}
+
+{% block title %}Manage{% endblock title %}
+
+{% block content %}
+
+    {% csrf_token %}
+
+    <h1 class="h1">Welcome, {{ user.username }}</h1>
+
+    <ul class="nav nav-tabs nav-fill mb-3" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#entry" type="button">Entries</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#classes" type="button">Classes</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="entry" role="tabpanel">
+            <p class="lead text-center mb-3">
+                Note: The list of absentees cannot be modified once compiled. <br> 
+                Thus, it is advised that the list of absentees be reviewed before submission.
+            </p>
+            <div class="table-responsive">
+                <table class="table text-center">
+                    <thead>
+                        <tr>
+                            <th class="col-12 col-lg-3">Class</th>
+                            <th class="col-12 col-lg-6">Absent</th>
+                            <th class="col-12 col-lg-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in entries %}
+                            <tr>
+                                <td>{{ entry.room.name }}</td>
+                                <td>{{ entry.absent }}</td>
+                                <td></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="text-center">
+                <button onclick="addRow()" class="btn mx-2 btn-primary">Add Row</button>
+                <button class="btn mx-2 btn-secondary" onclick="location.reload()">Compile</button>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="classes" role="tabpanel">
+
+            <ul class="nav nav-pills nav-fill" role="tablist">
+                {% for class in info.keys %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {% if forloop.counter == 1 %}active{% endif %}" 
+                            data-bs-toggle="tab" data-bs-target="#tab_{{ class.uid.hex }}" type="button">{{ class.name }}</button>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            <div class="tab-content">
+                {% for class, entries in info.items %}
+                    <div class="tab-pane fade {% if forloop.counter == 1 %}show active{% endif %}" 
+                        id="tab_{{ class.uid.hex }}" role="tabpanel">
+
+                        <div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 py-4">
+                            {% for entry in entries %}
+                                <div class="col">
+                                    <div class="card shadow">
+                                        <div class="card-body">
+                                            <div class="card-title" contenteditable>{{ entry.date|date }}</div>
+                                            <div class="text-secondary">Absent: {{ entry.absent }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+    
+
+{% endblock content %}
+
+{% block script %}
+
+    window.addEventListener('load', () => {
+        search = new URLSearchParams(location.search)
+        if (! search.get('date')) {
+            date = new Date()
+            url = new URL(location.href)
+            url.search = '?date=' + date.getDate() + '-' + (date.getUTCMonth()+1) + '-' + date.getFullYear()
+            location.href = url.href
+        }
+    })
+
+    const addRow = () => {
+        $('#entry table tbody').append(`
+            <tr>
+                <td>
+                    <select class="form-select" name='teacher'>
+                        {% for room in rooms %}
+                            <option value="{{ room.uid.hex }}">{{ room.name }}</option>
+                        {% endfor %}
+                    </select> 
+                </td>
+                <td contenteditable></td>
+                <td>
+                    <button class="btn mx-2 btn-primary" onclick="
+                        saveEntry(this.parentElement.parentElement)
+                    ">Save</button>
+                    <button class="btn mx-2 btn-danger" onclick="
+                        this.parentElement.parentElement.remove()
+                    ">Remove</button>
+                </td>
+            </tr>
+        `)
+    }
+
+    const saveEntry = (tr) => {
+        search = new URLSearchParams(location.search)
+
+        postData({
+            date: search.get('date'),
+            uid: tr.querySelector('select').value,
+            absent: tr.querySelector('td[contenteditable]').innerText
+        }, (res) => {
+            tr.children[0].innerHTML = res.class
+            tr.children[1].removeAttribute('contenteditable')
+            tr.children[2].innerHTML = ''
+        }, true)
+    }
+
+{% endblock script %}
